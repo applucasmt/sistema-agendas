@@ -1,1 +1,327 @@
+/* ========================================
+   ADMIN - ESTILOS ESPECÍFICOS
+   ======================================== */
 
+/* Badges */
+.badge {
+    background: var(--danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    margin-left: auto;
+    min-width: 20px;
+    text-align: center;
+}
+
+.badge-success {
+    background: var(--success);
+}
+
+.badge-warning {
+    background: var(--warning);
+}
+
+/* Tabela de Solicitações */
+.solicitacoes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--spacing-md);
+}
+
+.solicitacoes-table th {
+    background: var(--bg-tertiary);
+    padding: var(--spacing-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--glass-border);
+}
+
+.solicitacoes-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 14px;
+}
+
+.solicitacoes-table tr:hover {
+    background: var(--bg-tertiary);
+}
+
+.solicitacao-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.solicitacao-info .label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.solicitacao-info .value {
+    font-weight: 500;
+}
+
+.solicitacao-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Formulário de Cadastro */
+.admin-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.admin-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+    .admin-form .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Lista de Usuários */
+.usuarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+}
+
+.usuario-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    transition: all var(--transition-normal);
+}
+
+.usuario-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.usuario-card .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+}
+
+.usuario-card .nome {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.usuario-card .email {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.usuario-card .tipo {
+    font-size: 12px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    display: inline-block;
+}
+
+.usuario-card .status {
+    font-size: 12px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+.status-ativo {
+    background: #E3F9E5;
+    color: #34C759;
+}
+
+.status-inativo {
+    background: #FFE5E5;
+    color: #FF3B30;
+}
+
+[data-theme="dark"] .status-ativo {
+    background: #1A3A2A;
+    color: #30B350;
+}
+
+[data-theme="dark"] .status-inativo {
+    background: #3A1A1A;
+    color: #FF453A;
+}
+
+.usuario-card .actions {
+    margin-top: var(--spacing-md);
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Notificações */
+.notificacoes-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.notificacao-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    transition: all var(--transition-fast);
+}
+
+.notificacao-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.notificacao-item .icon {
+    font-size: 24px;
+}
+
+.notificacao-item .content {
+    flex: 1;
+}
+
+.notificacao-item .mensagem {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.notificacao-item .data {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.notificacao-item .status {
+    font-size: 12px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+}
+
+.notificacao-item .status-pendente {
+    background: #FFF3E0;
+    color: #FF9500;
+}
+
+.notificacao-item .status-lida {
+    background: #E3F9E5;
+    color: #34C759;
+}
+
+[data-theme="dark"] .notificacao-item .status-pendente {
+    background: #3A2A1A;
+    color: #FF9500;
+}
+
+[data-theme="dark"] .notificacao-item .status-lida {
+    background: #1A3A2A;
+    color: #30B350;
+}
+
+/* Configurações */
+.config-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.config-section h3 {
+    font-size: 18px;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+.config-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.config-item .label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.config-item .value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 28px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.toggle-switch.active {
+    background: var(--primary);
+}
+
+.toggle-switch .slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: var(--radius-full);
+    transition: transform var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch.active .slider {
+    transform: translateX(20px);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl) var(--spacing-lg);
+}
+
+.empty-state .icon {
+    font-size: 64px;
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+}
