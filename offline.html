@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Sistema de Agendas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+            background: #F2F2F7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .offline-container {
+            text-align: center;
+            max-width: 400px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #8E8E93;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #0055CC;
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #007AFF;
+            border: 1px solid #007AFF;
+            margin-left: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #FF3B30;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: #8E8E93;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 24px;
+            }
+
+            .offline-icon {
+                font-size: 60px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 8px 0;
+            }
+
+            .btn-secondary {
+                margin-left: 0;
+            }
+        }
+
+        [data-theme="dark"] body {
+            background: #000000;
+        }
+
+        [data-theme="dark"] .offline-container {
+            background: rgba(28, 28, 30, 0.8);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] h1 {
+            color: #FFFFFF;
+        }
+
+        [data-theme="dark"] p {
+            color: #AEAEB2;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">Você está offline</span>
+        </div>
+        <h1>Sem Conexão</h1>
+        <p>
+            Você está sem internet no momento.<br>
+            As agendas já carregadas estão disponíveis<br>
+            para visualização offline.
+        </p>
+        <button class="btn" onclick="tentarReconectar()">
+            🔄 Tentar Reconectar
+        </button>
+        <button class="btn btn-secondary" onclick="voltar()">
+            ⬅️ Voltar
+        </button>
+    </div>
+
+    <script>
+        function tentarReconectar() {
+            if (navigator.onLine) {
+                window.location.href = '/dashboard.html';
+            } else {
+                alert('Continue offline. Tente novamente quando tiver conexão.');
+            }
+        }
+
+        function voltar() {
+            window.history.back();
+        }
+
+        // Verificar conexão automaticamente
+        window.addEventListener('online', () => {
+            window.location.href = '/dashboard.html';
+        });
+
+        // Verificar se já está online
+        if (navigator.onLine) {
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
