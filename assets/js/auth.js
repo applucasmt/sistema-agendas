@@ -10,9 +10,6 @@ class AuthService {
         this.loadSession();
     }
 
-    /**
-     * Carrega sessão do localStorage
-     */
     loadSession() {
         try {
             const session = localStorage.getItem('agenda_session');
@@ -27,9 +24,6 @@ class AuthService {
         }
     }
 
-    /**
-     * Salva sessão no localStorage
-     */
     saveSession(usuario, token) {
         this.usuario = usuario;
         this.token = token;
@@ -39,32 +33,20 @@ class AuthService {
         }));
     }
 
-    /**
-     * Limpa sessão
-     */
     clearSession() {
         this.usuario = null;
         this.token = null;
         localStorage.removeItem('agenda_session');
     }
 
-    /**
-     * Verifica se usuário está autenticado
-     */
     isAuthenticated() {
         return this.usuario !== null && this.token !== null;
     }
 
-    /**
-     * Verifica se usuário é administrador
-     */
     isAdmin() {
         return this.usuario && this.usuario.Tipo === 'Administrador';
     }
 
-    /**
-     * Realiza login
-     */
     async login(email, senha) {
         try {
             const response = await api.login(email, senha);
@@ -91,17 +73,11 @@ class AuthService {
         }
     }
 
-    /**
-     * Realiza logout
-     */
     logout() {
         this.clearSession();
         window.location.href = '/login.html';
     }
 
-    /**
-     * Gera token simples para sessão
-     */
     generateToken(usuario) {
         const data = {
             email: usuario['E-mail'],
@@ -111,52 +87,34 @@ class AuthService {
         return btoa(JSON.stringify(data));
     }
 
-    /**
-     * Obtém usuário atual
-     */
     getUsuario() {
         return this.usuario;
     }
 
-    /**
-     * Obtém nome do usuário
-     */
     getNome() {
         return this.usuario ? this.usuario.Nome : 'Usuário';
     }
 
-    /**
-     * Obtém email do usuário
-     */
     getEmail() {
         return this.usuario ? this.usuario['E-mail'] : null;
     }
 
-    /**
-     * Obtém tipo do usuário
-     */
     getTipo() {
         return this.usuario ? this.usuario.Tipo : null;
     }
 
-    /**
-     * Verifica se a sessão expirou
-     */
     isExpired() {
         if (!this.token) return true;
         
         try {
             const data = JSON.parse(atob(this.token));
-            const expiracao = data.timestamp + (24 * 60 * 60 * 1000); // 24h
+            const expiracao = data.timestamp + (24 * 60 * 60 * 1000);
             return Date.now() > expiracao;
         } catch {
             return true;
         }
     }
 
-    /**
-     * Atualiza informações do usuário
-     */
     async atualizarUsuario() {
         if (!this.usuario) return;
         
@@ -172,31 +130,22 @@ class AuthService {
     }
 }
 
-// Instância global do serviço de autenticação
 const auth = new AuthService();
+window.auth = auth;
 
-// ============================================
-// PROTEÇÃO DE ROTAS
-// ============================================
-
-/**
- * Verifica autenticação e redireciona se necessário
- */
 function verificarAutenticacao() {
     const paginaAtual = window.location.pathname;
     const paginaLogin = '/login.html';
     const paginaAdmin = '/admin.html';
+    const paginaDashboard = '/dashboard.html';
     
-    // Páginas que não requerem autenticação
     const paginasPublicas = [paginaLogin, '/', '/index.html'];
     
-    // Se não está autenticado e não está em página pública
     if (!auth.isAuthenticated() && !paginasPublicas.includes(paginaAtual)) {
         window.location.href = paginaLogin;
         return false;
     }
     
-    // Se está autenticado e está na página de login
     if (auth.isAuthenticated() && paginaAtual === paginaLogin) {
         if (auth.isAdmin()) {
             window.location.href = '/admin.html';
@@ -206,41 +155,36 @@ function verificarAutenticacao() {
         return false;
     }
     
-    // Verificar permissões para admin
     if (paginaAtual === paginaAdmin && !auth.isAdmin()) {
         window.location.href = '/dashboard.html';
         return false;
     }
     
+    if (paginaAtual === paginaDashboard && auth.isAdmin()) {
+        // Admin pode ver dashboard também, mas fica no admin
+        if (window.location.pathname.includes('dashboard.html') && auth.isAdmin()) {
+            // Não redirecionar, permitir admin ver dashboard também
+        }
+    }
+    
     return true;
 }
 
-/**
- * Inicializa proteção de rotas
- */
 function initAuth() {
-    // Verificar autenticação ao carregar página
     if (!verificarAutenticacao()) {
         return;
     }
-    
-    // Atualizar informações do usuário na interface
     atualizarInterfaceUsuario();
 }
 
-/**
- * Atualiza interface com dados do usuário
- */
 function atualizarInterfaceUsuario() {
     if (!auth.isAuthenticated()) return;
     
-    // Atualizar nome do usuário
     const userNameElements = document.querySelectorAll('.user-name');
     userNameElements.forEach(el => {
         el.textContent = auth.getNome();
     });
     
-    // Mostrar/esconder elementos administrativos
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
         el.style.display = auth.isAdmin() ? 'flex' : 'none';
@@ -252,13 +196,6 @@ function atualizarInterfaceUsuario() {
     });
 }
 
-// ============================================
-// FUNÇÕES DE LOGIN
-// ============================================
-
-/**
- * Função de login para ser chamada pelo formulário
- */
 async function fazerLogin(event) {
     event.preventDefault();
     
@@ -267,7 +204,6 @@ async function fazerLogin(event) {
     const lembrar = document.getElementById('lembrar').checked;
     const btnLogin = document.getElementById('btnLogin');
     
-    // Mostrar loading
     btnLogin.disabled = true;
     btnLogin.innerHTML = '<span class="spinner"></span> Entrando...';
     
@@ -275,14 +211,12 @@ async function fazerLogin(event) {
         const result = await auth.login(email, senha);
         
         if (result.sucesso) {
-            // Salvar "Lembrar acesso"
             if (lembrar) {
                 localStorage.setItem('email_salvo', email);
             } else {
                 localStorage.removeItem('email_salvo');
             }
             
-            // Redirecionar
             if (auth.isAdmin()) {
                 window.location.href = '/admin.html';
             } else {
@@ -295,15 +229,11 @@ async function fazerLogin(event) {
         mostrarErroLogin('Erro ao conectar com o servidor');
         console.error('Erro no login:', error);
     } finally {
-        // Restaurar botão
         btnLogin.disabled = false;
         btnLogin.textContent = 'Entrar';
     }
 }
 
-/**
- * Mostra erro no login
- */
 function mostrarErroLogin(mensagem) {
     const errorContainer = document.getElementById('loginError');
     if (errorContainer) {
@@ -315,9 +245,6 @@ function mostrarErroLogin(mensagem) {
     }
 }
 
-/**
- * Preenche email salvo
- */
 function preencherEmailSalvo() {
     const emailSalvo = localStorage.getItem('email_salvo');
     if (emailSalvo) {
@@ -332,25 +259,16 @@ function preencherEmailSalvo() {
     }
 }
 
-// ============================================
-// LOGOUT
-// ============================================
-
-/**
- * Função de logout
- */
 function fazerLogout() {
     if (confirm('Tem certeza que deseja sair?')) {
         auth.logout();
     }
 }
 
-// Inicializar
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
     preencherEmailSalvo();
     
-    // Configurar botão de logout
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', fazerLogout);
