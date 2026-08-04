@@ -1,6 +1,6 @@
 /**
- * API - Comunicação com Google Apps Script
- * @version 1.0.0
+ * API - Comunicação com Google Apps Script via JSONP
+ * @version 1.0.0 - JSONP Support
  */
 
 const API_CONFIG = {
@@ -13,105 +13,93 @@ class ApiService {
     constructor() {
         this.baseUrl = API_CONFIG.BASE_URL;
         this.timeout = API_CONFIG.TIMEOUT;
+        this.requestId = 0;
     }
 
     /**
-     * Método GET - Para consultas
+     * Método GET com JSONP (para evitar CORS)
      */
     async get(params = {}) {
-        try {
-            const url = new URL(this.baseUrl);
-            Object.keys(params).forEach(key => {
-                if (params[key] !== undefined && params[key] !== null) {
-                    url.searchParams.append(key, params[key]);
-                }
-            });
+        return new Promise((resolve, reject) => {
+            try {
+                const url = new URL(this.baseUrl);
+                
+                // Adicionar parâmetros
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== undefined && params[key] !== null) {
+                        url.searchParams.append(key, params[key]);
+                    }
+                });
 
-            console.log('📤 GET Request:', url.toString());
+                // Adicionar callback para JSONP
+                const callbackName = `jsonp_callback_${++this.requestId}`;
+                url.searchParams.append('callback', callbackName);
 
-            const response = await this.fetchWithTimeout(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                },
-                mode: 'cors',
-                credentials: 'omit'
-            });
+                console.log('📤 JSONP Request:', url.toString());
 
-            const data = await response.json();
-            console.log('📥 GET Response:', data);
-            return data;
-        } catch (error) {
-            console.error('❌ Erro na requisição GET:', error);
-            throw error;
-        }
+                // Criar script tag
+                const script = document.createElement('script');
+                script.src = url.toString();
+
+                // Timeout
+                const timeoutId = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('Timeout: A requisição demorou muito para responder'));
+                }, this.timeout);
+
+                // Função de limpeza
+                const cleanup = () => {
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    delete window[callbackName];
+                    clearTimeout(timeoutId);
+                };
+
+                // Definir callback global
+                window[callbackName] = (data) => {
+                    cleanup();
+                    console.log('📥 JSONP Response:', data);
+                    resolve(data);
+                };
+
+                // Handler de erro
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('Erro na requisição JSONP'));
+                };
+
+                // Adicionar script ao DOM
+                document.head.appendChild(script);
+
+            } catch (error) {
+                console.error('❌ Erro na requisição JSONP:', error);
+                reject(error);
+            }
+        });
     }
 
     /**
-     * Método POST - Para escritas (usa GET internamente para evitar CORS)
+     * Método POST (usa GET com JSONP internamente)
      */
     async post(data) {
         try {
-            // Converter dados para parâmetros GET
-            const params = new URLSearchParams();
+            // Converter dados para parâmetros
+            const params = {};
             Object.keys(data).forEach(key => {
                 if (data[key] !== undefined && data[key] !== null) {
-                    // Se for objeto ou array, converter para JSON string
                     if (typeof data[key] === 'object') {
-                        params.append(key, JSON.stringify(data[key]));
+                        params[key] = JSON.stringify(data[key]);
                     } else {
-                        params.append(key, data[key]);
+                        params[key] = data[key];
                     }
                 }
             });
 
-            const url = new URL(this.baseUrl);
-            url.search = params.toString();
-
-            console.log('📤 POST Request (via GET):', url.toString());
-
-            const response = await this.fetchWithTimeout(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                },
-                mode: 'cors',
-                credentials: 'omit'
-            });
-
-            const result = await response.json();
-            console.log('📥 POST Response:', result);
-            return result;
+            console.log('📤 POST via JSONP:', params);
+            return await this.get(params);
         } catch (error) {
             console.error('❌ Erro na requisição POST:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Fetch com timeout
-     */
-    async fetchWithTimeout(url, options = {}) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => {
-            controller.abort();
-            console.warn('⏰ Timeout:', url);
-        }, this.timeout);
-
-        try {
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            return response;
-        } catch (error) {
-            clearTimeout(timeout);
             throw error;
         }
     }
@@ -120,9 +108,6 @@ class ApiService {
     // MÉTODOS DA API
     // ============================================
 
-    /**
-     * Autenticação
-     */
     async login(email, senha) {
         return this.get({
             acao: 'login',
@@ -131,16 +116,10 @@ class ApiService {
         });
     }
 
-    /**
-     * Dashboard
-     */
     async getDashboard() {
         return this.get({ acao: 'dashboard' });
     }
 
-    /**
-     * Listar Agendas
-     */
     async listarAgendas(filtros = {}) {
         return this.get({
             acao: 'listarAgendas',
@@ -148,9 +127,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Buscar Agenda por ID
-     */
     async buscarAgenda(id) {
         return this.get({
             acao: 'buscarAgenda',
@@ -158,9 +134,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Criar Agenda
-     */
     async criarAgenda(dados) {
         return this.post({
             acao: 'criarAgenda',
@@ -168,9 +141,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Editar Agenda
-     */
     async editarAgenda(dados) {
         return this.post({
             acao: 'editarAgenda',
@@ -178,9 +148,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Excluir Agenda
-     */
     async excluirAgenda(id) {
         return this.post({
             acao: 'excluirAgenda',
@@ -188,9 +155,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Atualizar Status
-     */
     async atualizarStatus(id, status) {
         return this.post({
             acao: 'atualizarStatus',
@@ -199,9 +163,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Solicitar Adiamento
-     */
     async solicitarAdiamento(dados) {
         return this.post({
             acao: 'solicitarAdiamento',
@@ -209,9 +170,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Aprovar Adiamento
-     */
     async aprovarAdiamento(dados) {
         return this.post({
             acao: 'aprovarAdiamento',
@@ -219,9 +177,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Recusar Adiamento
-     */
     async recusarAdiamento(dados) {
         return this.post({
             acao: 'recusarAdiamento',
@@ -229,16 +184,10 @@ class ApiService {
         });
     }
 
-    /**
-     * Listar Usuários
-     */
     async listarUsuarios() {
         return this.get({ acao: 'listarUsuarios' });
     }
 
-    /**
-     * Buscar Usuário por ID
-     */
     async buscarUsuario(id) {
         return this.get({
             acao: 'buscarUsuario',
@@ -246,9 +195,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Criar Usuário
-     */
     async criarUsuario(dados) {
         return this.post({
             acao: 'criarUsuario',
@@ -256,9 +202,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Editar Usuário
-     */
     async editarUsuario(dados) {
         return this.post({
             acao: 'editarUsuario',
@@ -266,9 +209,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Excluir Usuário
-     */
     async excluirUsuario(id) {
         return this.post({
             acao: 'excluirUsuario',
@@ -276,9 +216,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Listar Notificações
-     */
     async listarNotificacoes(usuario) {
         return this.get({
             acao: 'listarNotificacoes',
@@ -286,9 +223,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Criar Notificação
-     */
     async criarNotificacao(dados) {
         return this.post({
             acao: 'criarNotificacao',
@@ -301,8 +235,7 @@ class ApiService {
 const api = new ApiService();
 window.api = api;
 
-// Log da configuração
-console.log('🚀 API Configurada:', {
+console.log('🚀 API Configurada (JSONP):', {
     baseUrl: API_CONFIG.BASE_URL,
     timeout: API_CONFIG.TIMEOUT
 });
