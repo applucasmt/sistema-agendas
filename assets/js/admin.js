@@ -24,10 +24,6 @@ class AdminApp {
         this.registerServiceWorker();
     }
 
-    // ============================================
-    // TEMA
-    // ============================================
-
     loadTheme() {
         const saved = localStorage.getItem('theme_choice');
         if (saved) {
@@ -61,10 +57,6 @@ class AdminApp {
         localStorage.setItem('theme_choice', this.isDarkMode ? 'dark' : 'light');
     }
 
-    // ============================================
-    // SIDEBAR
-    // ============================================
-
     setupSidebar() {
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
@@ -75,7 +67,6 @@ class AdminApp {
             });
         }
 
-        // Fechar sidebar no mobile
         document.addEventListener('click', (e) => {
             if (window.innerWidth < 768) {
                 const isClickInside = sidebar?.contains(e.target);
@@ -94,10 +85,6 @@ class AdminApp {
             sidebar.classList.toggle('open', this.isSidebarOpen);
         }
     }
-
-    // ============================================
-    // NAVEGAÇÃO
-    // ============================================
 
     setupNavigation() {
         const links = document.querySelectorAll('.sidebar-link');
@@ -118,7 +105,6 @@ class AdminApp {
     async loadPage(page) {
         this.currentPage = page;
 
-        // Atualizar link ativo
         document.querySelectorAll('.sidebar-link').forEach(link => {
             link.classList.toggle('active', link.dataset.page === page);
         });
@@ -155,10 +141,6 @@ class AdminApp {
         }
     }
 
-    // ============================================
-    // DASHBOARD
-    // ============================================
-
     async loadDashboard(container) {
         const response = await api.getDashboard();
         
@@ -168,14 +150,9 @@ class AdminApp {
         }
 
         const dados = response.dados;
-        container.innerHTML = this.renderDashboard(dados);
-        this.initCharts(dados);
-    }
-
-    renderDashboard(dados) {
-        return `
+        container.innerHTML = `
             <div class="dashboard-container">
-                <h1 class="page-title">Dashboard</h1>
+                <h1 class="page-title">Dashboard Administrativo</h1>
                 
                 <div class="dashboard-grid">
                     <div class="stat-card">
@@ -239,10 +216,11 @@ class AdminApp {
                 </div>
             </div>
         `;
+
+        this.initCharts(dados);
     }
 
     initCharts(dados) {
-        // Gráfico por Mês
         const ctxMes = document.getElementById('chartMes');
         if (ctxMes) {
             const meses = Object.keys(dados.mesMap);
@@ -282,7 +260,6 @@ class AdminApp {
             });
         }
 
-        // Gráfico por Status
         const ctxStatus = document.getElementById('chartStatus');
         if (ctxStatus) {
             const statusMap = dados.statusMap;
@@ -325,7 +302,6 @@ class AdminApp {
             });
         }
 
-        // Gráfico por Tipo
         const ctxTipo = document.getElementById('chartTipo');
         if (ctxTipo) {
             const tipoMap = dados.tipoMap;
@@ -368,10 +344,6 @@ class AdminApp {
         }
     }
 
-    // ============================================
-    // AGENDAS (Admin)
-    // ============================================
-
     async loadAgendas(container) {
         const response = await api.listarAgendas();
         
@@ -403,7 +375,6 @@ class AdminApp {
             </div>
         `;
 
-        // Configurar busca
         document.getElementById('searchAdminAgenda')?.addEventListener('input', (e) => {
             this.filterAdminAgendas(e.target.value);
         });
@@ -413,7 +384,7 @@ class AdminApp {
         const statusClass = `status-${agenda.Status.toLowerCase().replace(/ /g, '')}`;
         
         return `
-            <div class="agenda-card" data-id="${agenda.ID}">
+            <div class="agenda-card" data-id="${agenda.ID}" onclick="admin.verDetalhesAgenda('${agenda.ID}')" style="cursor: pointer;">
                 <div class="agenda-card-header">
                     <div class="agenda-type">
                         <span>${this.getTipoIcon(agenda['Tipo da Agenda'])}</span>
@@ -430,7 +401,7 @@ class AdminApp {
                     ${agenda.Descrição ? `<div class="agenda-detail">📝 ${agenda.Descrição}</div>` : ''}
                 </div>
                 
-                <div class="agenda-actions">
+                <div class="agenda-actions" onclick="event.stopPropagation();">
                     ${agenda['Link Google Maps'] ? `
                         <a href="${agenda['Link Google Maps']}" target="_blank" class="btn btn-primary btn-sm">🗺️ Maps</a>
                     ` : ''}
@@ -454,9 +425,21 @@ class AdminApp {
         });
     }
 
-    // ============================================
-    // SOLICITAÇÕES
-    // ============================================
+    async verDetalhesAgenda(id) {
+        await agendaDetail.open(id);
+    }
+
+    getTipoIcon(tipo) {
+        const icons = {
+            'Reunião': '🤝',
+            'Consulta': '👨‍⚕️',
+            'Evento': '🎉',
+            'Compromisso': '📌',
+            'Entrega': '📦',
+            'Outro': '📋'
+        };
+        return icons[tipo] || '📅';
+    }
 
     async loadSolicitacoes(container) {
         const response = await api.listarAgendas();
@@ -568,10 +551,6 @@ class AdminApp {
         }
     }
 
-    // ============================================
-    // USUÁRIOS
-    // ============================================
-
     async loadUsuarios(container) {
         const response = await api.listarUsuarios();
         
@@ -610,10 +589,6 @@ class AdminApp {
         `;
     }
 
-    // ============================================
-    // NOTIFICAÇÕES
-    // ============================================
-
     async loadNotificacoes(container) {
         const response = await api.listarNotificacoes();
         
@@ -647,10 +622,6 @@ class AdminApp {
             </div>
         `;
     }
-
-    // ============================================
-    // CONFIGURAÇÕES
-    // ============================================
 
     loadConfiguracoes(container) {
         container.innerHTML = `
@@ -712,95 +683,111 @@ class AdminApp {
         }
     }
 
-    // ============================================
-    // CRUD - AGENDAS
-    // ============================================
-
     abrirCriarAgenda() {
-        const modal = this.openModal('Nova Agenda');
-        modal.innerHTML = `
-            <form id="formCriarAgenda" class="admin-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Tipo da Agenda *</label>
-                        <select class="form-control" id="tipoAgenda" required>
-                            <option value="">Selecione...</option>
-                            <option value="Reunião">Reunião</option>
-                            <option value="Consulta">Consulta</option>
-                            <option value="Evento">Evento</option>
-                            <option value="Compromisso">Compromisso</option>
-                            <option value="Entrega">Entrega</option>
-                            <option value="Outro">Outro</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status *</label>
-                        <select class="form-control" id="statusAgenda" required>
-                            <option value="Agendada">Agendada</option>
-                            <option value="Confirmada">Confirmada</option>
-                            <option value="Em andamento">Em andamento</option>
-                            <option value="Realizada">Realizada</option>
-                            <option value="Cancelada">Cancelada</option>
-                            <option value="Adiada">Adiada</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Data *</label>
-                        <input type="date" class="form-control" id="dataAgenda" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Horário *</label>
-                        <input type="time" class="form-control" id="horarioAgenda" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Participantes</label>
-                    <input type="text" class="form-control" id="participantesAgenda" placeholder="Nomes separados por vírgula">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Local *</label>
-                    <input type="text" class="form-control" id="localAgenda" placeholder="Endereço completo" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-control" id="descricaoAgenda" rows="3"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Criar Agenda</button>
-            </form>
-        `;
-
-        // Preencher data atual
         const hoje = new Date().toISOString().split('T')[0];
-        document.getElementById('dataAgenda').value = hoje;
-
-        document.getElementById('formCriarAgenda').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const dados = {
-                tipo: document.getElementById('tipoAgenda').value,
-                status: document.getElementById('statusAgenda').value,
-                data: document.getElementById('dataAgenda').value,
-                horario: document.getElementById('horarioAgenda').value,
-                participantes: document.getElementById('participantesAgenda').value,
-                local: document.getElementById('localAgenda').value,
-                descricao: document.getElementById('descricaoAgenda').value,
-                usuario: auth.getEmail()
-            };
-
-            try {
-                const response = await api.criarAgenda(dados);
-                if (response.sucesso) {
-                    alert('Agenda criada com sucesso!');
-                    this.closeModal();
-                    this.loadPage('agendas');
-                } else {
-                    alert('Erro ao criar: ' + response.mensagem);
+        modal.form({
+            title: 'Nova Agenda',
+            fields: [
+                {
+                    id: 'tipo',
+                    label: 'Tipo da Agenda',
+                    type: 'select',
+                    required: true,
+                    options: [
+                        { value: '', label: 'Selecione...' },
+                        { value: 'Reunião', label: 'Reunião' },
+                        { value: 'Consulta', label: 'Consulta' },
+                        { value: 'Evento', label: 'Evento' },
+                        { value: 'Compromisso', label: 'Compromisso' },
+                        { value: 'Entrega', label: 'Entrega' },
+                        { value: 'Outro', label: 'Outro' }
+                    ]
+                },
+                {
+                    id: 'status',
+                    label: 'Status',
+                    type: 'select',
+                    required: true,
+                    value: 'Agendada',
+                    options: [
+                        { value: 'Agendada', label: 'Agendada' },
+                        { value: 'Confirmada', label: 'Confirmada' },
+                        { value: 'Em andamento', label: 'Em andamento' },
+                        { value: 'Realizada', label: 'Realizada' },
+                        { value: 'Cancelada', label: 'Cancelada' },
+                        { value: 'Adiada', label: 'Adiada' }
+                    ]
+                },
+                {
+                    id: 'data',
+                    label: 'Data',
+                    type: 'date',
+                    required: true,
+                    value: hoje
+                },
+                {
+                    id: 'horario',
+                    label: 'Horário',
+                    type: 'time',
+                    required: true,
+                    value: '09:00'
+                },
+                {
+                    id: 'participantes',
+                    label: 'Participantes',
+                    type: 'text',
+                    placeholder: 'Nomes separados por vírgula'
+                },
+                {
+                    id: 'local',
+                    label: 'Local',
+                    type: 'text',
+                    required: true,
+                    placeholder: 'Endereço completo'
+                },
+                {
+                    id: 'descricao',
+                    label: 'Descrição',
+                    type: 'textarea',
+                    placeholder: 'Descrição da agenda...',
+                    rows: 3
                 }
-            } catch (error) {
-                alert('Erro ao criar agenda');
-                console.error(error);
+            ],
+            submitText: 'Criar Agenda',
+            onSubmit: async (data) => {
+                const dados = {
+                    tipo: data.tipo,
+                    status: data.status,
+                    data: data.data,
+                    horario: data.horario,
+                    participantes: data.participantes,
+                    local: data.local,
+                    descricao: data.descricao,
+                    usuario: auth.getEmail()
+                };
+
+                try {
+                    const response = await api.criarAgenda(dados);
+                    if (response.sucesso) {
+                        modal.alert({
+                            title: '✅ Sucesso',
+                            message: 'Agenda criada com sucesso!'
+                        });
+                        setTimeout(() => {
+                            this.loadPage('agendas');
+                        }, 1500);
+                    } else {
+                        modal.alert({
+                            title: 'Erro',
+                            message: response.mensagem
+                        });
+                    }
+                } catch (error) {
+                    modal.alert({
+                        title: 'Erro',
+                        message: 'Não foi possível criar a agenda'
+                    });
+                }
             }
         });
     }
@@ -808,164 +795,220 @@ class AdminApp {
     async editarAgenda(id) {
         const response = await api.buscarAgenda(id);
         if (!response.sucesso) {
-            alert('Erro ao buscar agenda: ' + response.mensagem);
+            modal.alert({
+                title: 'Erro',
+                message: response.mensagem
+            });
             return;
         }
 
         const agenda = response.dados;
-        const modal = this.openModal('Editar Agenda');
-        modal.innerHTML = `
-            <form id="formEditarAgenda" class="admin-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Tipo da Agenda *</label>
-                        <select class="form-control" id="editTipoAgenda" required>
-                            <option value="Reunião" ${agenda['Tipo da Agenda'] === 'Reunião' ? 'selected' : ''}>Reunião</option>
-                            <option value="Consulta" ${agenda['Tipo da Agenda'] === 'Consulta' ? 'selected' : ''}>Consulta</option>
-                            <option value="Evento" ${agenda['Tipo da Agenda'] === 'Evento' ? 'selected' : ''}>Evento</option>
-                            <option value="Compromisso" ${agenda['Tipo da Agenda'] === 'Compromisso' ? 'selected' : ''}>Compromisso</option>
-                            <option value="Entrega" ${agenda['Tipo da Agenda'] === 'Entrega' ? 'selected' : ''}>Entrega</option>
-                            <option value="Outro" ${agenda['Tipo da Agenda'] === 'Outro' ? 'selected' : ''}>Outro</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status *</label>
-                        <select class="form-control" id="editStatusAgenda" required>
-                            <option value="Agendada" ${agenda.Status === 'Agendada' ? 'selected' : ''}>Agendada</option>
-                            <option value="Confirmada" ${agenda.Status === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
-                            <option value="Em andamento" ${agenda.Status === 'Em andamento' ? 'selected' : ''}>Em andamento</option>
-                            <option value="Realizada" ${agenda.Status === 'Realizada' ? 'selected' : ''}>Realizada</option>
-                            <option value="Cancelada" ${agenda.Status === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
-                            <option value="Adiada" ${agenda.Status === 'Adiada' ? 'selected' : ''}>Adiada</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Data *</label>
-                        <input type="date" class="form-control" id="editDataAgenda" value="${agenda.Data}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Horário *</label>
-                        <input type="time" class="form-control" id="editHorarioAgenda" value="${agenda.Horário}" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Participantes</label>
-                    <input type="text" class="form-control" id="editParticipantesAgenda" value="${agenda.Participantes || ''}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Local *</label>
-                    <input type="text" class="form-control" id="editLocalAgenda" value="${agenda.Local}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-control" id="editDescricaoAgenda" rows="3">${agenda.Descrição || ''}</textarea>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
-            </form>
-        `;
-
-        document.getElementById('formEditarAgenda').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const dados = {
-                id,
-                tipo: document.getElementById('editTipoAgenda').value,
-                status: document.getElementById('editStatusAgenda').value,
-                data: document.getElementById('editDataAgenda').value,
-                horario: document.getElementById('editHorarioAgenda').value,
-                participantes: document.getElementById('editParticipantesAgenda').value,
-                local: document.getElementById('editLocalAgenda').value,
-                descricao: document.getElementById('editDescricaoAgenda').value
-            };
-
-            try {
-                const response = await api.editarAgenda(dados);
-                if (response.sucesso) {
-                    alert('Agenda atualizada com sucesso!');
-                    this.closeModal();
-                    this.loadPage('agendas');
-                } else {
-                    alert('Erro ao atualizar: ' + response.mensagem);
+        
+        modal.form({
+            title: 'Editar Agenda',
+            fields: [
+                {
+                    id: 'tipo',
+                    label: 'Tipo da Agenda',
+                    type: 'select',
+                    required: true,
+                    value: agenda['Tipo da Agenda'],
+                    options: [
+                        { value: 'Reunião', label: 'Reunião' },
+                        { value: 'Consulta', label: 'Consulta' },
+                        { value: 'Evento', label: 'Evento' },
+                        { value: 'Compromisso', label: 'Compromisso' },
+                        { value: 'Entrega', label: 'Entrega' },
+                        { value: 'Outro', label: 'Outro' }
+                    ]
+                },
+                {
+                    id: 'status',
+                    label: 'Status',
+                    type: 'select',
+                    required: true,
+                    value: agenda.Status,
+                    options: [
+                        { value: 'Agendada', label: 'Agendada' },
+                        { value: 'Confirmada', label: 'Confirmada' },
+                        { value: 'Em andamento', label: 'Em andamento' },
+                        { value: 'Realizada', label: 'Realizada' },
+                        { value: 'Cancelada', label: 'Cancelada' },
+                        { value: 'Adiada', label: 'Adiada' }
+                    ]
+                },
+                {
+                    id: 'data',
+                    label: 'Data',
+                    type: 'date',
+                    required: true,
+                    value: agenda.Data
+                },
+                {
+                    id: 'horario',
+                    label: 'Horário',
+                    type: 'time',
+                    required: true,
+                    value: agenda.Horário
+                },
+                {
+                    id: 'participantes',
+                    label: 'Participantes',
+                    type: 'text',
+                    value: agenda.Participantes || '',
+                    placeholder: 'Nomes separados por vírgula'
+                },
+                {
+                    id: 'local',
+                    label: 'Local',
+                    type: 'text',
+                    required: true,
+                    value: agenda.Local,
+                    placeholder: 'Endereço completo'
+                },
+                {
+                    id: 'descricao',
+                    label: 'Descrição',
+                    type: 'textarea',
+                    value: agenda.Descrição || '',
+                    placeholder: 'Descrição da agenda...',
+                    rows: 3
                 }
-            } catch (error) {
-                alert('Erro ao atualizar agenda');
-                console.error(error);
+            ],
+            submitText: 'Salvar Alterações',
+            onSubmit: async (data) => {
+                const dados = {
+                    id: agenda.ID,
+                    tipo: data.tipo,
+                    status: data.status,
+                    data: data.data,
+                    horario: data.horario,
+                    participantes: data.participantes,
+                    local: data.local,
+                    descricao: data.descricao
+                };
+
+                try {
+                    const response = await api.editarAgenda(dados);
+                    if (response.sucesso) {
+                        modal.alert({
+                            title: '✅ Sucesso',
+                            message: 'Agenda atualizada com sucesso!'
+                        });
+                        setTimeout(() => {
+                            this.loadPage('agendas');
+                        }, 1500);
+                    } else {
+                        modal.alert({
+                            title: 'Erro',
+                            message: response.mensagem
+                        });
+                    }
+                } catch (error) {
+                    modal.alert({
+                        title: 'Erro',
+                        message: 'Não foi possível atualizar a agenda'
+                    });
+                }
             }
         });
     }
 
     async excluirAgenda(id) {
-        if (!confirm('Tem certeza que deseja excluir esta agenda permanentemente?')) return;
-        
-        try {
-            const response = await api.excluirAgenda(id);
-            if (response.sucesso) {
-                alert('Agenda excluída com sucesso!');
-                this.loadPage('agendas');
-            } else {
-                alert('Erro ao excluir: ' + response.mensagem);
+        const result = await modal.confirm({
+            title: '⚠️ Excluir Agenda',
+            message: 'Tem certeza que deseja excluir esta agenda permanentemente?',
+            confirmText: 'Excluir',
+            confirmClass: 'btn-danger'
+        });
+
+        if (result) {
+            try {
+                const response = await api.excluirAgenda(id);
+                if (response.sucesso) {
+                    modal.alert({
+                        title: '✅ Sucesso',
+                        message: 'Agenda excluída com sucesso!'
+                    });
+                    setTimeout(() => {
+                        this.loadPage('agendas');
+                    }, 1500);
+                } else {
+                    modal.alert({
+                        title: 'Erro',
+                        message: response.mensagem
+                    });
+                }
+            } catch (error) {
+                modal.alert({
+                    title: 'Erro',
+                    message: 'Não foi possível excluir a agenda'
+                });
             }
-        } catch (error) {
-            alert('Erro ao excluir agenda');
-            console.error(error);
         }
     }
 
-    // ============================================
-    // CRUD - USUÁRIOS
-    // ============================================
-
     abrirCriarUsuario() {
-        const modal = this.openModal('Novo Usuário');
-        modal.innerHTML = `
-            <form id="formCriarUsuario" class="admin-form">
-                <div class="form-group">
-                    <label class="form-label">Nome *</label>
-                    <input type="text" class="form-control" id="nomeUsuario" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">E-mail *</label>
-                    <input type="email" class="form-control" id="emailUsuario" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tipo *</label>
-                    <select class="form-control" id="tipoUsuario" required>
-                        <option value="Usuário">Usuário</option>
-                        <option value="Administrador">Administrador</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Senha *</label>
-                    <input type="password" class="form-control" id="senhaUsuario" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Criar Usuário</button>
-            </form>
-        `;
-
-        document.getElementById('formCriarUsuario').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const dados = {
-                nome: document.getElementById('nomeUsuario').value,
-                email: document.getElementById('emailUsuario').value,
-                tipo: document.getElementById('tipoUsuario').value,
-                senha: document.getElementById('senhaUsuario').value
-            };
-
-            try {
-                const response = await api.criarUsuario(dados);
-                if (response.sucesso) {
-                    alert('Usuário criado com sucesso!');
-                    this.closeModal();
-                    this.loadPage('usuarios');
-                } else {
-                    alert('Erro ao criar: ' + response.mensagem);
+        modal.form({
+            title: 'Novo Usuário',
+            fields: [
+                {
+                    id: 'nome',
+                    label: 'Nome',
+                    type: 'text',
+                    required: true,
+                    placeholder: 'Nome completo'
+                },
+                {
+                    id: 'email',
+                    label: 'E-mail',
+                    type: 'email',
+                    required: true,
+                    placeholder: 'email@exemplo.com'
+                },
+                {
+                    id: 'tipo',
+                    label: 'Tipo',
+                    type: 'select',
+                    required: true,
+                    value: 'Usuário',
+                    options: [
+                        { value: 'Usuário', label: 'Usuário' },
+                        { value: 'Administrador', label: 'Administrador' }
+                    ]
+                },
+                {
+                    id: 'senha',
+                    label: 'Senha',
+                    type: 'password',
+                    required: true,
+                    placeholder: 'Mínimo 6 caracteres'
                 }
-            } catch (error) {
-                alert('Erro ao criar usuário');
-                console.error(error);
+            ],
+            submitText: 'Criar Usuário',
+            onSubmit: async (data) => {
+                try {
+                    const response = await api.criarUsuario(data);
+                    if (response.sucesso) {
+                        modal.alert({
+                            title: '✅ Sucesso',
+                            message: 'Usuário criado com sucesso!'
+                        });
+                        setTimeout(() => {
+                            this.loadPage('usuarios');
+                        }, 1500);
+                    } else {
+                        modal.alert({
+                            title: 'Erro',
+                            message: response.mensagem
+                        });
+                    }
+                } catch (error) {
+                    modal.alert({
+                        title: 'Erro',
+                        message: 'Não foi possível criar o usuário'
+                    });
+                }
             }
         });
     }
@@ -973,101 +1016,141 @@ class AdminApp {
     async editarUsuario(id) {
         const response = await api.listarUsuarios();
         if (!response.sucesso) {
-            alert('Erro ao buscar usuários');
+            modal.alert({
+                title: 'Erro',
+                message: 'Erro ao buscar usuários'
+            });
             return;
         }
 
         const usuario = response.dados.find(u => u.ID === id);
         if (!usuario) {
-            alert('Usuário não encontrado');
+            modal.alert({
+                title: 'Erro',
+                message: 'Usuário não encontrado'
+            });
             return;
         }
 
-        const modal = this.openModal('Editar Usuário');
-        modal.innerHTML = `
-            <form id="formEditarUsuario" class="admin-form">
-                <div class="form-group">
-                    <label class="form-label">Nome *</label>
-                    <input type="text" class="form-control" id="editNomeUsuario" value="${usuario.Nome}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">E-mail *</label>
-                    <input type="email" class="form-control" id="editEmailUsuario" value="${usuario['E-mail']}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tipo *</label>
-                    <select class="form-control" id="editTipoUsuario" required>
-                        <option value="Usuário" ${usuario.Tipo === 'Usuário' ? 'selected' : ''}>Usuário</option>
-                        <option value="Administrador" ${usuario.Tipo === 'Administrador' ? 'selected' : ''}>Administrador</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Status *</label>
-                    <select class="form-control" id="editStatusUsuario" required>
-                        <option value="Ativo" ${usuario.Status === 'Ativo' ? 'selected' : ''}>Ativo</option>
-                        <option value="Inativo" ${usuario.Status === 'Inativo' ? 'selected' : ''}>Inativo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Nova Senha (deixe em branco para manter)</label>
-                    <input type="password" class="form-control" id="editSenhaUsuario" placeholder="Digite nova senha">
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
-            </form>
-        `;
-
-        document.getElementById('formEditarUsuario').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const dados = {
-                id,
-                nome: document.getElementById('editNomeUsuario').value,
-                email: document.getElementById('editEmailUsuario').value,
-                tipo: document.getElementById('editTipoUsuario').value,
-                status: document.getElementById('editStatusUsuario').value
-            };
-
-            const novaSenha = document.getElementById('editSenhaUsuario').value;
-            if (novaSenha) {
-                dados.senha = novaSenha;
-            }
-
-            try {
-                const response = await api.editarUsuario(dados);
-                if (response.sucesso) {
-                    alert('Usuário atualizado com sucesso!');
-                    this.closeModal();
-                    this.loadPage('usuarios');
-                } else {
-                    alert('Erro ao atualizar: ' + response.mensagem);
+        modal.form({
+            title: 'Editar Usuário',
+            fields: [
+                {
+                    id: 'nome',
+                    label: 'Nome',
+                    type: 'text',
+                    required: true,
+                    value: usuario.Nome
+                },
+                {
+                    id: 'email',
+                    label: 'E-mail',
+                    type: 'email',
+                    required: true,
+                    value: usuario['E-mail']
+                },
+                {
+                    id: 'tipo',
+                    label: 'Tipo',
+                    type: 'select',
+                    required: true,
+                    value: usuario.Tipo,
+                    options: [
+                        { value: 'Usuário', label: 'Usuário' },
+                        { value: 'Administrador', label: 'Administrador' }
+                    ]
+                },
+                {
+                    id: 'status',
+                    label: 'Status',
+                    type: 'select',
+                    required: true,
+                    value: usuario.Status,
+                    options: [
+                        { value: 'Ativo', label: 'Ativo' },
+                        { value: 'Inativo', label: 'Inativo' }
+                    ]
+                },
+                {
+                    id: 'senha',
+                    label: 'Nova Senha',
+                    type: 'password',
+                    placeholder: 'Deixe em branco para manter'
                 }
-            } catch (error) {
-                alert('Erro ao atualizar usuário');
-                console.error(error);
+            ],
+            submitText: 'Salvar Alterações',
+            onSubmit: async (data) => {
+                const dados = {
+                    id: usuario.ID,
+                    nome: data.nome,
+                    email: data.email,
+                    tipo: data.tipo,
+                    status: data.status
+                };
+
+                if (data.senha) {
+                    dados.senha = data.senha;
+                }
+
+                try {
+                    const response = await api.editarUsuario(dados);
+                    if (response.sucesso) {
+                        modal.alert({
+                            title: '✅ Sucesso',
+                            message: 'Usuário atualizado com sucesso!'
+                        });
+                        setTimeout(() => {
+                            this.loadPage('usuarios');
+                        }, 1500);
+                    } else {
+                        modal.alert({
+                            title: 'Erro',
+                            message: response.mensagem
+                        });
+                    }
+                } catch (error) {
+                    modal.alert({
+                        title: 'Erro',
+                        message: 'Não foi possível atualizar o usuário'
+                    });
+                }
             }
         });
     }
 
     async excluirUsuario(id) {
-        if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-        
-        try {
-            const response = await api.excluirUsuario(id);
-            if (response.sucesso) {
-                alert('Usuário excluído com sucesso!');
-                this.loadPage('usuarios');
-            } else {
-                alert('Erro ao excluir: ' + response.mensagem);
+        const result = await modal.confirm({
+            title: '⚠️ Excluir Usuário',
+            message: 'Tem certeza que deseja excluir este usuário permanentemente?',
+            confirmText: 'Excluir',
+            confirmClass: 'btn-danger'
+        });
+
+        if (result) {
+            try {
+                const response = await api.excluirUsuario(id);
+                if (response.sucesso) {
+                    modal.alert({
+                        title: '✅ Sucesso',
+                        message: 'Usuário excluído com sucesso!'
+                    });
+                    setTimeout(() => {
+                        this.loadPage('usuarios');
+                    }, 1500);
+                } else {
+                    modal.alert({
+                        title: 'Erro',
+                        message: response.mensagem
+                    });
+                }
+            } catch (error) {
+                modal.alert({
+                    title: 'Erro',
+                    message: 'Não foi possível excluir o usuário'
+                });
             }
-        } catch (error) {
-            alert('Erro ao excluir usuário');
-            console.error(error);
         }
     }
-
-    // ============================================
-    // CONTADORES
-    // ============================================
 
     async loadNotificacoesCount() {
         try {
@@ -1101,67 +1184,12 @@ class AdminApp {
         }
     }
 
-    // ============================================
-    // UTILITÁRIOS
-    // ============================================
-
-    getTipoIcon(tipo) {
-        const icons = {
-            'Reunião': '🤝',
-            'Consulta': '👨‍⚕️',
-            'Evento': '🎉',
-            'Compromisso': '📌',
-            'Entrega': '📦',
-            'Outro': '📋'
-        };
-        return icons[tipo] || '📅';
-    }
-
     setupLogout() {
         document.getElementById('logoutBtn')?.addEventListener('click', () => {
             if (confirm('Tem certeza que deseja sair?')) {
                 auth.logout();
             }
         });
-    }
-
-    openModal(title) {
-        let overlay = document.querySelector('.modal-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
-            overlay.innerHTML = `
-                <div class="modal">
-                    <div class="modal-header">
-                        <h2 class="modal-title"></h2>
-                        <button class="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body"></div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-            
-            overlay.querySelector('.modal-close').addEventListener('click', () => {
-                this.closeModal();
-            });
-            
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    this.closeModal();
-                }
-            });
-        }
-
-        overlay.querySelector('.modal-title').textContent = title;
-        overlay.classList.add('active');
-        return overlay.querySelector('.modal-body');
-    }
-
-    closeModal() {
-        const overlay = document.querySelector('.modal-overlay');
-        if (overlay) {
-            overlay.classList.remove('active');
-        }
     }
 
     renderError(mensagem) {
@@ -1187,3 +1215,6 @@ class AdminApp {
         }
     }
 }
+
+const admin = new AdminApp();
+window.admin = admin;
