@@ -5,7 +5,7 @@
 
 const API_CONFIG = {
     // ATUALIZE COM A URL DO SEU WEB APP
-    BASE_URL: 'https://script.google.com/macros/s/SEU_ID_AQUI/exec',
+    BASE_URL: 'https://script.google.com/macros/s/AKfycbyouNUkUo3QjEfXOe8bWOPgdbkl9QkcNq4AMU8ZG7JqUAuu-30IJ8nzO4JskT5KS5bE/exec',
     TIMEOUT: 30000
 };
 
