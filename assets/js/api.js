@@ -3,10 +3,8 @@
  * @version 1.0.0
  */
 
-// Configuração da API
 const API_CONFIG = {
-    // URL do Web App do Google Apps Script
-    // ATUALIZAR COM A URL GERADA AO PUBLICAR
+    // ATUALIZE COM A URL DO SEU WEB APP
     BASE_URL: 'https://script.google.com/macros/s/SEU_ID_AQUI/exec',
     TIMEOUT: 30000
 };
@@ -17,9 +15,6 @@ class ApiService {
         this.timeout = API_CONFIG.TIMEOUT;
     }
 
-    /**
-     * Realiza requisição GET
-     */
     async get(params = {}) {
         try {
             const url = new URL(this.baseUrl);
@@ -39,9 +34,6 @@ class ApiService {
         }
     }
 
-    /**
-     * Realiza requisição POST
-     */
     async post(data) {
         try {
             const response = await this.fetchWithTimeout(this.baseUrl, {
@@ -57,9 +49,6 @@ class ApiService {
         }
     }
 
-    /**
-     * Fetch com timeout
-     */
     async fetchWithTimeout(url, options = {}) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), this.timeout);
@@ -77,9 +66,6 @@ class ApiService {
         }
     }
 
-    /**
-     * Headers padrão
-     */
     getHeaders() {
         return {
             'Content-Type': 'application/json',
@@ -88,12 +74,9 @@ class ApiService {
     }
 
     // ============================================
-    // MÉTODOS ESPECÍFICOS DA API
+    // MÉTODOS DA API
     // ============================================
 
-    /**
-     * Autenticação
-     */
     async login(email, senha) {
         return this.get({
             acao: 'login',
@@ -102,16 +85,10 @@ class ApiService {
         });
     }
 
-    /**
-     * Dashboard
-     */
     async getDashboard() {
         return this.get({ acao: 'dashboard' });
     }
 
-    /**
-     * Listar Agendas
-     */
     async listarAgendas(filtros = {}) {
         return this.get({
             acao: 'listarAgendas',
@@ -119,9 +96,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Buscar Agenda por ID
-     */
     async buscarAgenda(id) {
         return this.get({
             acao: 'buscarAgenda',
@@ -129,9 +103,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Criar Agenda
-     */
     async criarAgenda(dados) {
         return this.post({
             acao: 'criarAgenda',
@@ -139,9 +110,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Editar Agenda
-     */
     async editarAgenda(dados) {
         return this.post({
             acao: 'editarAgenda',
@@ -149,9 +117,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Excluir Agenda
-     */
     async excluirAgenda(id) {
         return this.post({
             acao: 'excluirAgenda',
@@ -159,9 +124,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Atualizar Status
-     */
     async atualizarStatus(id, status) {
         return this.post({
             acao: 'atualizarStatus',
@@ -170,9 +132,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Solicitar Adiamento
-     */
     async solicitarAdiamento(dados) {
         return this.post({
             acao: 'solicitarAdiamento',
@@ -180,9 +139,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Aprovar Adiamento
-     */
     async aprovarAdiamento(dados) {
         return this.post({
             acao: 'aprovarAdiamento',
@@ -190,9 +146,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Recusar Adiamento
-     */
     async recusarAdiamento(dados) {
         return this.post({
             acao: 'recusarAdiamento',
@@ -200,16 +153,17 @@ class ApiService {
         });
     }
 
-    /**
-     * Listar Usuários
-     */
     async listarUsuarios() {
         return this.get({ acao: 'listarUsuarios' });
     }
 
-    /**
-     * Criar Usuário
-     */
+    async buscarUsuario(id) {
+        return this.get({
+            acao: 'buscarUsuario',
+            id
+        });
+    }
+
     async criarUsuario(dados) {
         return this.post({
             acao: 'criarUsuario',
@@ -217,9 +171,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Editar Usuário
-     */
     async editarUsuario(dados) {
         return this.post({
             acao: 'editarUsuario',
@@ -227,9 +178,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Excluir Usuário
-     */
     async excluirUsuario(id) {
         return this.post({
             acao: 'excluirUsuario',
@@ -237,9 +185,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Listar Notificações
-     */
     async listarNotificacoes(usuario) {
         return this.get({
             acao: 'listarNotificacoes',
@@ -247,9 +192,6 @@ class ApiService {
         });
     }
 
-    /**
-     * Criar Notificação
-     */
     async criarNotificacao(dados) {
         return this.post({
             acao: 'criarNotificacao',
@@ -258,5 +200,5 @@ class ApiService {
     }
 }
 
-// Instância global da API
 const api = new ApiService();
+window.api = api;
